@@ -48,8 +48,8 @@ class MainActivity : ComponentActivity() {
 		setContent {
 			MyApplicationTheme {
 
-
-				View(listLink, listGlobal)
+				About().view()
+				//View(listLink, listGlobal)
 			}
 		}
 	}
