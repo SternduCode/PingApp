@@ -32,6 +32,10 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.sterndu.pingonvolcano.*
 import kotlinx.coroutines.*
 
@@ -47,9 +51,14 @@ class MainActivity : ComponentActivity() {
 		val listGlobal = getIps()
 		setContent {
 			MyApplicationTheme {
+				val navController = rememberNavController()
 
-				About().view()
-				//View(listLink, listGlobal)
+				val navHost = NavHost(navController = navController, startDestination = "chat") {
+					composable("chat") { baseView(navController) { view(listLink, listGlobal) } }
+					composable("about") { baseView(navController) { About().view() } }
+					composable("settings") { /*Settings().view()*/ }
+				}
+
 			}
 		}
 	}
@@ -88,42 +97,18 @@ class MainActivity : ComponentActivity() {
 
 	@Composable
 	@SuppressLint("UnusedMaterialScaffoldPaddingParameter")
-	fun View(listLink: List<LinkAddress>?, listGlobal: List<String>) {
-		var localIps: String = ""
-		localIps += listLink?.joinToString(separator = "\n  ", prefix = "  ") { "$it" }
-		val globalIps: String = "Your Public IPs are:\n${
-			listGlobal.joinToString(
-				separator = "\n  ",
-				prefix = "  "
-			) { "$it" }
-		}"
-
-		val appendixList : MutableList<Message> = remember { mutableStateListOf() }
+	fun baseView(navController: NavHostController, content: @Composable () -> Unit) {
 
 		var drawerWidth by remember {
-			 mutableStateOf(0f)
+			mutableStateOf(0f)
 		}
-
-		var listSize: Int = 0
-
-		val coroutineScope = rememberCoroutineScope()
-
-		val scaffoldState = rememberScaffoldState()
-
-		var input by remember { mutableStateOf("") }
-		var output by remember { mutableStateOf("") }
 
 		val density = LocalDensity.current
 
-		val listState = rememberLazyListState()
+		val scaffoldState = rememberScaffoldState()
 
-		setConsumer({ inp ->
-			output = "$inp\nYour Local IPs are:\n$localIps\n$globalIps"
-		}) { text, type ->
-			runOnUiThread {
-				appendixList.add(Message(text, type))
-			}
-		}
+		val coroutineScope = rememberCoroutineScope()
+
 		Scaffold (
 			drawerContent = {
 				Drawerheader(with(density) { drawerWidth.toDp() })
@@ -152,13 +137,13 @@ class MainActivity : ComponentActivity() {
 					onItemClick = {
 						when(it.id) {
 							"home" -> {
-
+								navController.navigate("chat")
 							}
 							"settings" -> {
-
+								navController.navigate("settings")
 							}
 							"about" -> {
-
+								navController.navigate("about")
 							}
 						}
 					}
@@ -171,84 +156,123 @@ class MainActivity : ComponentActivity() {
 				modifier = Modifier.fillMaxSize(),
 				color = MaterialTheme.colors.background
 			) {
-				Column {
-					Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.TopEnd) {
-						Column {
-							if (!isConnected()) {
-								TextField(
-									value = output,
-									onValueChange = {},
-									readOnly = true,
-									modifier = Modifier.fillMaxWidth()
+				Box(contentAlignment = Alignment.TopEnd) {
+					Column(horizontalAlignment = Alignment.Start, modifier = Modifier.fillMaxWidth()) {
+						content.invoke()
+					}
+					Column(horizontalAlignment = Alignment.End) {
+						MyApplicationTheme2 {
+							Button(
+								onClick = { coroutineScope.launch { scaffoldState.drawerState.open() } },
+								modifier = Modifier
+									.width(Dp(64f))
+									.height(Dp(64f))
+							) {
+								Icon(
+									imageVector = Icons.Default.Menu,
+									contentDescription = null,
+									modifier = Modifier.size(42.dp),
+									tint = LocalContentColor.current.copy(alpha = .8f)
 								)
 							}
-							val layoutInfo = listState.layoutInfo
-
-							var isAtBottom by remember {
-								mutableStateOf(true)
-							}
-							if (layoutInfo.visibleItemsInfo.isNotEmpty()) {
-								val lastElem = layoutInfo.visibleItemsInfo[layoutInfo.visibleItemsInfo.lastIndex]
-								isAtBottom = layoutInfo.viewportSize.height == lastElem.size + lastElem.offset
-							}
-							LazyColumn(state = listState, modifier = Modifier.onSizeChanged {
-
-								if (size>it.height) {
-									println("${it.height} $size")
-									val scrollBy = (-it.height+size).toFloat()
-									coroutineScope.launch {
-										listState.animateScrollBy(scrollBy)
-									}
-								}
-								size=it.height
-							}) {
-								synchronized(appendixList) {
-									val sizeChanged = listSize != appendixList.size
-									listSize = appendixList.size
-									items(appendixList) {
-										it.compose()
-									}
-									if (sizeChanged && isAtBottom) {
-										coroutineScope.launch {
-											if (layoutInfo.visibleItemsInfo.isNotEmpty()) {
-												listState.animateScrollToItem(
-													listSize - 1,
-													-layoutInfo.viewportSize.height + layoutInfo.visibleItemsInfo[layoutInfo.visibleItemsInfo.lastIndex].size
-												)
-											}
-										}
-									}
-								}
-
-							}
-						}
-						Column(horizontalAlignment = Alignment.End) {
-							MyApplicationTheme2 {
+							//println(navController.currentDestination?.navigatorName)
+							if (isConnected() ) {
 								Button(
-									onClick = { coroutineScope.launch { scaffoldState.drawerState.open() } },
+									onClick = { Thread { reload() }.start() },
 									modifier = Modifier
 										.width(Dp(64f))
 										.height(Dp(64f))
 								) {
 									Icon(
-										imageVector = Icons.Default.Menu,
+										imageVector = Icons.Default.Refresh,
 										contentDescription = null,
 										modifier = Modifier.size(42.dp),
 										tint = LocalContentColor.current.copy(alpha = .8f)
 									)
 								}
-								if (isConnected()) {
-									Button(
-										onClick = { Thread { reload() }.start() },
-										modifier = Modifier
-											.width(Dp(64f))
-											.height(Dp(64f))
-									) {
-										Icon(
-											imageVector = Icons.Default.Refresh,
-											contentDescription = null,
-											modifier = Modifier.size(42.dp),
-											tint = LocalContentColor.current.copy(alpha = .8f)
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	@Composable
+	fun view(
+		listLink: List<LinkAddress>?,
+		listGlobal: List<String>
+	) {
+		var localIps: String = ""
+		localIps += listLink?.joinToString(separator = "\n  ", prefix = "  ") { "$it" }
+		val globalIps: String = "Your Public IPs are:\n${
+			listGlobal.joinToString(
+				separator = "\n  ",
+				prefix = "  "
+			) { "$it" }
+		}"
+
+		val appendixList : MutableList<Message> = remember { mutableStateListOf() }
+
+		var listSize: Int = 0
+
+		val coroutineScope = rememberCoroutineScope()
+
+		var input by remember { mutableStateOf("") }
+		var output by remember { mutableStateOf("") }
+
+		val listState = rememberLazyListState()
+
+		setConsumer({ inp ->
+			output = "$inp\nYour Local IPs are:\n$localIps\n$globalIps"
+		}) { text, type ->
+			runOnUiThread {
+				appendixList.add(Message(text, type))
+			}
+		}
+		Column {
+			Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.TopEnd) {
+				Column {
+					if (!isConnected()) {
+						TextField(
+							value = output,
+							onValueChange = {},
+							readOnly = true,
+							modifier = Modifier.fillMaxWidth()
+						)
+					}
+					val layoutInfo = listState.layoutInfo
+
+					var isAtBottom by remember {
+						mutableStateOf(true)
+					}
+					if (layoutInfo.visibleItemsInfo.isNotEmpty()) {
+						val lastElem = layoutInfo.visibleItemsInfo[layoutInfo.visibleItemsInfo.lastIndex]
+						isAtBottom = layoutInfo.viewportSize.height == lastElem.size + lastElem.offset
+					}
+					LazyColumn(state = listState, modifier = Modifier.onSizeChanged {
+
+						if (size>it.height) {
+							println("${it.height} $size")
+							val scrollBy = (-it.height+size).toFloat()
+							coroutineScope.launch {
+								listState.animateScrollBy(scrollBy)
+							}
+						}
+						size=it.height
+					}) {
+						synchronized(appendixList) {
+							val sizeChanged = listSize != appendixList.size
+							listSize = appendixList.size
+							items(appendixList) {
+								it.compose()
+							}
+							if (sizeChanged && isAtBottom) {
+								coroutineScope.launch {
+									if (layoutInfo.visibleItemsInfo.isNotEmpty()) {
+										listState.animateScrollToItem(
+											listSize - 1,
+											-layoutInfo.viewportSize.height + layoutInfo.visibleItemsInfo[layoutInfo.visibleItemsInfo.lastIndex].size
 										)
 									}
 								}
@@ -256,48 +280,49 @@ class MainActivity : ComponentActivity() {
 						}
 
 					}
-					Row(
-						verticalAlignment = Alignment.Bottom
-					) {
-						KeyboardOptions
-						TextField(
-							value = input,
-							onValueChange = {
-								input = it
-							},
-							modifier = Modifier
-								.widthIn(
-									min = LocalConfiguration.current.screenWidthDp.dp - Dp(64f),
-									max = LocalConfiguration.current.screenWidthDp.dp - Dp(64f)
-								)
-								.heightIn(
-									min = Dp(64f),
-									max = LocalConfiguration.current.screenHeightDp.dp / 2f
-								),
-							shape = RectangleShape
+				}
+
+			}
+			Row(
+				verticalAlignment = Alignment.Bottom
+			) {
+				KeyboardOptions
+				TextField(
+					value = input,
+					onValueChange = {
+						input = it
+					},
+					modifier = Modifier
+						.widthIn(
+							min = LocalConfiguration.current.screenWidthDp.dp - Dp(64f),
+							max = LocalConfiguration.current.screenWidthDp.dp - Dp(64f)
 						)
-						Button(
-							onClick = {
-								inputs.add(input)
-								input = ""
-							},
-							modifier = Modifier
-								.height(Dp(64f))
-								.background(
-									TextFieldDefaults
-										.textFieldColors()
-										.backgroundColor(enabled = true).value
-								),
-							shape = RoundedCornerShape(64f)
-						) {
-							//Text("Send", fontSize = textSize)
-							Icon(
-								imageVector = Icons.Default.Send,
-								contentDescription = null,
-								modifier = Modifier.size(42.dp)
-							)
-						}
-					}
+						.heightIn(
+							min = Dp(64f),
+							max = LocalConfiguration.current.screenHeightDp.dp / 2f
+						),
+					shape = RectangleShape
+				)
+				Button(
+					onClick = {
+						inputs.add(input)
+						input = ""
+					},
+					modifier = Modifier
+						.height(Dp(64f))
+						.background(
+							TextFieldDefaults
+								.textFieldColors()
+								.backgroundColor(enabled = true).value
+						),
+					shape = RoundedCornerShape(64f)
+				) {
+					//Text("Send", fontSize = textSize)
+					Icon(
+						imageVector = Icons.Default.Send,
+						contentDescription = null,
+						modifier = Modifier.size(42.dp)
+					)
 				}
 			}
 		}
@@ -305,11 +330,10 @@ class MainActivity : ComponentActivity() {
 }
 
 
-
 @Preview
 @Composable
 fun DefaultPreview() {
 	MyApplicationTheme {
-		MainActivity().View(null, listOf())
+		MainActivity().view(null, listOf())
 	}
 }
