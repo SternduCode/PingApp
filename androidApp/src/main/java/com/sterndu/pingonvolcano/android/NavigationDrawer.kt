@@ -12,6 +12,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -21,9 +25,18 @@ fun Drawerheader(){
     Box(modifier = Modifier
         .fillMaxWidth()
         .padding(vertical = 64.dp),
-        contentAlignment = Alignment.Center
+       contentAlignment = Alignment.Center
     ){
-        Text(text = "Ping", fontSize = 60.sp)
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            val fontFamily = FontFamily(
+                Font(R.font.cascadiacode)
+            )
+            Text(text = "Ping", fontSize = 60.sp,fontFamily = fontFamily)
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(text = "~by Sterndu", fontSize = 20.sp,fontFamily = fontFamily)
+        }
     }
 }
 

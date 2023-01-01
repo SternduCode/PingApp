@@ -129,7 +129,19 @@ class MainActivity : ComponentActivity() {
 							icon = Icons.Default.Info
 						),
 					),
-					onItemClick = {}
+					onItemClick = {
+						when(it.id) {
+							"home" -> {
+
+							}
+							"settings" -> {
+
+							}
+							"about" -> {
+
+							}
+						}
+					}
 				)
 			},
 			scaffoldState = scaffoldState

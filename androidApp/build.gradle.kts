@@ -41,5 +41,8 @@ dependencies {
     implementation("androidx.activity:activity-compose:1.5.1")
     implementation("androidx.emoji:emoji:1.0.0")
     implementation("com.google.firebase:protolite-well-known-types:18.0.0")
+    implementation("androidx.appcompat:appcompat:1.4.1")
+    implementation("com.google.android.material:material:1.4.+")
+    implementation("androidx.constraintlayout:constraintlayout:2.1.3")
 
 }
