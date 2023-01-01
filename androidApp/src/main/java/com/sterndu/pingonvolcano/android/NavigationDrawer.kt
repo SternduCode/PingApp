@@ -6,21 +6,22 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 
 @Composable
-fun Drawerheader(){
+fun Drawerheader(drawerWidth: Dp){
+    println(drawerWidth)
     Box(modifier = Modifier
-        .fillMaxWidth()
-        .padding(vertical = 64.dp),
+        .width(drawerWidth)
+        .padding(vertical = 60.dp),
         contentAlignment = Alignment.Center
     ){
         Text(text = "Ping", fontSize = 60.sp)
@@ -32,13 +33,14 @@ fun Drawerbody(
     itemsList: List<MenuItem>,
     modifier: Modifier = Modifier,
     itemTextStyle: TextStyle = TextStyle(fontSize = 18.sp),
-    onItemClick: (MenuItem) -> Unit
+    onItemClick: (MenuItem) -> Unit,
+    drawerWidth: Dp
 ){
     LazyColumn(modifier) {
         items(items = itemsList) { item ->
             Row (
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .width(drawerWidth)
                     .clickable {
                         onItemClick(item)
                     }

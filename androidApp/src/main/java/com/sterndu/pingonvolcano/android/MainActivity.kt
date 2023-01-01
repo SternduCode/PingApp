@@ -12,6 +12,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -22,9 +23,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.material.icons.filled.*
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
 import com.sterndu.pingonvolcano.*
@@ -69,6 +74,18 @@ class MainActivity : ComponentActivity() {
 
 	private var size: Int = 0
 
+	fun customShape(changeWidth : (Float) -> Unit) =  object : Shape {
+		override fun createOutline(
+			size: Size,
+			layoutDirection: LayoutDirection,
+			density: Density
+		): Outline {
+			changeWidth.invoke(size.width.coerceAtMost(size.height))
+			return Outline.Rectangle(Rect(0f,0f,
+				size.width.coerceAtMost(size.height) /* width */, size.height))
+		}
+	}
+
 	@Composable
 	@SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 	fun View(listLink: List<LinkAddress>?, listGlobal: List<String>) {
@@ -81,11 +98,13 @@ class MainActivity : ComponentActivity() {
 			) { "$it" }
 		}"
 
-		val  appendixList : MutableList<Message> = remember { mutableStateListOf() }
+		val appendixList : MutableList<Message> = remember { mutableStateListOf() }
+
+		var drawerWidth by remember {
+			 mutableStateOf(0f)
+		}
 
 		var listSize: Int = 0
-
-		val textSize: TextUnit = 12f.sp
 
 		val coroutineScope = rememberCoroutineScope()
 
@@ -94,9 +113,9 @@ class MainActivity : ComponentActivity() {
 		var input by remember { mutableStateOf("") }
 		var output by remember { mutableStateOf("") }
 
-		val listState = rememberLazyListState()
+		val density = LocalDensity.current
 
-		val view = LocalView.current
+		val listState = rememberLazyListState()
 
 		setConsumer({ inp ->
 			output = "$inp\nYour Local IPs are:\n$localIps\n$globalIps"
@@ -107,8 +126,9 @@ class MainActivity : ComponentActivity() {
 		}
 		Scaffold (
 			drawerContent = {
-				Drawerheader()
+				Drawerheader(with(density) { drawerWidth.toDp() })
 				Drawerbody(
+					drawerWidth = with(density) { drawerWidth.toDp() },
 					itemsList = listOf(
 						MenuItem(
 							id = "home",
@@ -132,6 +152,7 @@ class MainActivity : ComponentActivity() {
 					onItemClick = {}
 				)
 			},
+			drawerShape = customShape { drawerWidth = it },
 			scaffoldState = scaffoldState
 		) {
 			Surface(
@@ -172,11 +193,8 @@ class MainActivity : ComponentActivity() {
 								synchronized(appendixList) {
 									val sizeChanged = listSize != appendixList.size
 									listSize = appendixList.size
-									for (idx in appendixList.indices) {
-										val text = appendixList[idx]
-										item(idx, "Message") {
-											text.compose()
-										}
+									items(appendixList) {
+										it.compose()
 									}
 									if (sizeChanged && isAtBottom) {
 										coroutineScope.launch {
