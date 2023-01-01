@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.Icon
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Outline
@@ -56,7 +57,7 @@ class MainActivity : ComponentActivity() {
 				val navHost = NavHost(navController = navController, startDestination = "chat") {
 					composable("chat") { baseView(navController) { view(listLink, listGlobal) } }
 					composable("about") { baseView(navController) { About().view() } }
-					composable("settings") { /*Settings().view()*/ }
+					composable("settings") { baseView(navController) { } }
 				}
 
 			}
