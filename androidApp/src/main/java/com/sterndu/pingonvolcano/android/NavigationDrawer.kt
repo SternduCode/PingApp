@@ -6,10 +6,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -18,13 +19,21 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun Drawerheader(drawerWidth: Dp){
-    println(drawerWidth)
     Box(modifier = Modifier
         .width(drawerWidth)
-        .padding(vertical = 60.dp),
+        .padding(vertical = 64.dp),
         contentAlignment = Alignment.Center
     ){
-        Text(text = "Ping", fontSize = 60.sp)
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            val fontFamily = FontFamily(
+                Font(R.font.cascadiacode)
+            )
+            Text(text = "Ping", fontSize = 60.sp,fontFamily = fontFamily)
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(text = "~by Sterndu", fontSize = 20.sp,fontFamily = fontFamily)
+        }
     }
 }
 
