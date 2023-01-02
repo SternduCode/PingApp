@@ -37,6 +37,7 @@ kotlin {
         }
         val androidMain by getting {
             dependencies {
+                implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.5.1")
                 implementation("io.ktor:ktor-client-core:$ktorVersion")
                 implementation("io.ktor:ktor-client-android:$ktorVersion")
             }

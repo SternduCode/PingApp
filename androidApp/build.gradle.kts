@@ -36,6 +36,7 @@ dependencies {
     val nav_version = "2.5.3"
 
     implementation(project(":shared"))
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.5.1")
     implementation("androidx.compose.ui:ui:1.2.1")
     implementation("androidx.compose.ui:ui-tooling:1.2.1")
     implementation("androidx.compose.ui:ui-tooling-preview:1.2.1")

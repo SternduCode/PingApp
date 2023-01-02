@@ -25,13 +25,16 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.material.icons.filled.*
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -39,24 +42,25 @@ import androidx.navigation.compose.rememberNavController
 import com.sterndu.pingonvolcano.*
 import kotlinx.coroutines.*
 
-
 class MainActivity : ComponentActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		System.setProperty("debug","true")
-		start()
 		val listLink = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 			dos()
 		} else null
 		val listGlobal = getIps()
 		setContent {
-			MyApplicationTheme {
+			val appViewModel: AppViewModel = viewModel()
+			onCreation(appViewModel)
+			appViewModel.init(listLink,listGlobal)
+			ApplicationTheme {
 				val navController = rememberNavController()
 
-				val navHost = NavHost(navController = navController, startDestination = "chat") {
-					composable("chat") { baseView(navController) { view(listLink, listGlobal) } }
-					composable("about") { baseView(navController) { About().view() } }
-					composable("settings") { /*Settings().view()*/ }
+				NavHost(navController = navController, startDestination = "chat") {
+					composable("chat") { BaseView(navController) { View(appViewModel) } }
+					composable("about") { BaseView(navController) { About().View() } }
+					composable("settings") { BaseView(navController) { Settings().View() } }
 				}
 
 			}
@@ -68,7 +72,7 @@ class MainActivity : ComponentActivity() {
 		val connectivityManager = getSystemService(ConnectivityManager::class.java)
 		val currentNetwork = connectivityManager.activeNetwork
 
-		val caps = connectivityManager.getNetworkCapabilities(currentNetwork)
+		//val caps = connectivityManager.getNetworkCapabilities(currentNetwork)
 		val linkProperties = connectivityManager.getLinkProperties(currentNetwork)
 		// println(caps)
 		// println(linkProperties)
@@ -83,7 +87,7 @@ class MainActivity : ComponentActivity() {
 
 	private var size: Int = 0
 
-	fun customShape(changeWidth : (Float) -> Unit) =  object : Shape {
+	private fun customShape(changeWidth : (Float) -> Unit) =  object : Shape {
 		override fun createOutline(
 			size: Size,
 			layoutDirection: LayoutDirection,
@@ -97,7 +101,7 @@ class MainActivity : ComponentActivity() {
 
 	@Composable
 	@SuppressLint("UnusedMaterialScaffoldPaddingParameter")
-	fun baseView(navController: NavHostController, content: @Composable () -> Unit) {
+	fun BaseView(navController: NavHostController, content: @Composable () -> Unit) {
 
 		var drawerWidth by remember {
 			mutableStateOf(0f)
@@ -161,7 +165,7 @@ class MainActivity : ComponentActivity() {
 						content.invoke()
 					}
 					Column(horizontalAlignment = Alignment.End) {
-						MyApplicationTheme2 {
+						ApplicationThemeTransparent {
 							Button(
 								onClick = { coroutineScope.launch { scaffoldState.drawerState.open() } },
 								modifier = Modifier
@@ -199,36 +203,42 @@ class MainActivity : ComponentActivity() {
 	}
 
 	@Composable
-	fun view(
-		listLink: List<LinkAddress>?,
-		listGlobal: List<String>
+	fun Message.Compose(fontSize: TextUnit = TextUnit.Unspecified) {
+		val color = TextFieldDefaults.textFieldColors().backgroundColor(enabled = true).value
+		Row(
+			modifier = Modifier.background(color)
+		) {
+			TextField(
+				value = text,
+				onValueChange = {},
+				readOnly = true,
+				modifier = Modifier
+					.fillMaxWidth()
+					.padding(start = Dp(type.leftPad.toFloat()), end = Dp(type.rightPad.toFloat())),
+				textStyle = TextStyle(fontSize = fontSize),
+				colors = TextFieldDefaults.textFieldColors(backgroundColor = Color(0f, 0f, 0f, 0f))
+			)
+		}
+	}
+
+	@Composable
+	fun View(
+		appViewModel: AppViewModel
 	) {
-		var localIps: String = ""
-		localIps += listLink?.joinToString(separator = "\n  ", prefix = "  ") { "$it" }
-		val globalIps: String = "Your Public IPs are:\n${
-			listGlobal.joinToString(
-				separator = "\n  ",
-				prefix = "  "
-			) { "$it" }
-		}"
 
-		val appendixList : MutableList<Message> = remember { mutableStateListOf() }
+		val appendixList : Sequence<Message> = remember { appViewModel.elements }
 
-		var listSize: Int = 0
+		var listSize = 0
 
 		val coroutineScope = rememberCoroutineScope()
 
 		var input by remember { mutableStateOf("") }
-		var output by remember { mutableStateOf("") }
+		val output by appViewModel.status.collectAsState()
 
 		val listState = rememberLazyListState()
 
-		setConsumer({ inp ->
-			output = "$inp\nYour Local IPs are:\n$localIps\n$globalIps"
-		}) { text, type ->
-			runOnUiThread {
-				appendixList.add(Message(text, type))
-			}
+		setConsumer { text, type ->
+				appViewModel.addChatMessage(Message(text, type))
 		}
 		Column {
 			Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.TopEnd) {
@@ -241,7 +251,7 @@ class MainActivity : ComponentActivity() {
 							modifier = Modifier.fillMaxWidth()
 						)
 					}
-					val layoutInfo = listState.layoutInfo
+					val layoutInfo by remember { derivedStateOf { listState.layoutInfo } }
 
 					var isAtBottom by remember {
 						mutableStateOf(true)
@@ -262,10 +272,10 @@ class MainActivity : ComponentActivity() {
 						size=it.height
 					}) {
 						synchronized(appendixList) {
-							val sizeChanged = listSize != appendixList.size
-							listSize = appendixList.size
-							items(appendixList) {
-								it.compose()
+							val sizeChanged = listSize != appendixList.count()
+							listSize = appendixList.count()
+							items(appendixList.toList()) {
+								it.Compose()
 							}
 							if (sizeChanged && isAtBottom) {
 								coroutineScope.launch {
@@ -317,7 +327,6 @@ class MainActivity : ComponentActivity() {
 						),
 					shape = RoundedCornerShape(64f)
 				) {
-					//Text("Send", fontSize = textSize)
 					Icon(
 						imageVector = Icons.Default.Send,
 						contentDescription = null,
@@ -333,7 +342,7 @@ class MainActivity : ComponentActivity() {
 @Preview
 @Composable
 fun DefaultPreview() {
-	MyApplicationTheme {
-		MainActivity().view(null, listOf())
+	ApplicationTheme {
+		MainActivity().View(viewModel())
 	}
 }
