@@ -171,7 +171,8 @@ class MainActivity : ComponentActivity() {
 								onClick = { coroutineScope.launch { scaffoldState.drawerState.open() } },
 								modifier = Modifier
 									.width(Dp(64f))
-									.height(Dp(64f))
+									.height(Dp(64f)),
+								elevation = ButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp, 0.dp)
 							) {
 								Icon(
 									imageVector = Icons.Default.Menu,
@@ -186,7 +187,8 @@ class MainActivity : ComponentActivity() {
 									onClick = { Thread { reload() }.start() },
 									modifier = Modifier
 										.width(Dp(64f))
-										.height(Dp(64f))
+										.height(Dp(64f)),
+									elevation = ButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp, 0.dp)
 								) {
 									Icon(
 										imageVector = Icons.Default.Refresh,
