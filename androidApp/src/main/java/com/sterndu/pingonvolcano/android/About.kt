@@ -41,7 +41,6 @@ class About {
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-
                 Text(text = "About",fontSize = 30.sp, fontFamily = fontFamily)
                 Spacer(modifier = Modifier.size(20.dp))
                 Column(
