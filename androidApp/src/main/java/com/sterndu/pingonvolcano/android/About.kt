@@ -171,7 +171,7 @@ class About {
                                     modifier = Modifier
                                         .size(20.dp)
                                 )
-                                Text(text = "2023",Modifier.padding(start = 5.dp),fontFamily = fontFamily)
+                                Text(text = "2023 The PingApp Developers",Modifier.padding(start = 5.dp),fontFamily = fontFamily)
                             }
                         }
                     }
