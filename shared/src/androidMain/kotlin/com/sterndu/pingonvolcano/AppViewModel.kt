@@ -16,14 +16,13 @@ class AppViewModel : ViewModel() {
 	private lateinit var localIps: String
 	private lateinit var globalIps: String
 
-	fun init(localIps: List<LinkAddress>?, globalIps: List<String>) {
-		this.localIps = ""
-		this.localIps += localIps?.joinToString(separator = "\n  ", prefix = "  ") { "$it" }
+	fun init(localIps: List<LinkAddress>, globalIps: List<String>) {
+		this.localIps = localIps.joinToString(separator = "\n  ", prefix = "  ")
 		this.globalIps = "Your Public IPs are:\n${
 			globalIps.joinToString(
 				separator = "\n  ",
 				prefix = "  "
-			) { it }
+			)
 		}"
 	}
 

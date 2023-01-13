@@ -23,7 +23,7 @@ class Settings {
         val fontFamily = FontFamily(
             Font(R.font.cascadiacode)
         )
-        ApplicationTheme() {
+        ApplicationTheme {
             Column(
                 modifier = Modifier
                     .fillMaxSize()

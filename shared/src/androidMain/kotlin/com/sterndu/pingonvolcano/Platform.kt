@@ -1,7 +1,6 @@
 package com.sterndu.pingonvolcano
 
 import android.annotation.SuppressLint
-import android.icu.text.SimpleDateFormat
 import android.os.Build
 import com.sterndu.bridge.BridgeClient
 import com.sterndu.bridge.BridgeUtil
@@ -18,6 +17,7 @@ import io.ktor.client.statement.*
 import kotlinx.coroutines.*
 import java.io.IOException
 import java.lang.Runnable
+import java.text.SimpleDateFormat
 import java.util.*
 
 var time : Long = 0L

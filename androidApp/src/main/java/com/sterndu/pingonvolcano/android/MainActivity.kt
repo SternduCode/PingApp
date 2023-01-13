@@ -47,9 +47,8 @@ class MainActivity : ComponentActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		System.setProperty("debug","true")
-		val listLink = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-			dos()
-		} else null
+		val listLink = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) dos()
+		else listOf()
 		val listGlobal = getIps()
 		setContent {
 			val appViewModel: AppViewModel = viewModel()
@@ -69,7 +68,7 @@ class MainActivity : ComponentActivity() {
 	}
 
 	@RequiresApi(Build.VERSION_CODES.M)
-	fun dos() : List<LinkAddress>? {
+	fun dos() : List<LinkAddress> {
 		val connectivityManager = getSystemService(ConnectivityManager::class.java)
 		val currentNetwork = connectivityManager.activeNetwork
 
@@ -78,7 +77,7 @@ class MainActivity : ComponentActivity() {
 		// println(caps)
 		// println(linkProperties)
 
-		return linkProperties?.linkAddresses
+		return linkProperties?.linkAddresses ?: listOf()
 	}
 
 	override fun onDestroy() {
