@@ -3,11 +3,9 @@ package com.sterndu.pingonvolcano.android
 import android.annotation.SuppressLint
 import android.net.ConnectivityManager
 import android.net.LinkAddress
-import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.*
@@ -18,16 +16,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.Icon
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
@@ -47,8 +44,7 @@ class MainActivity : ComponentActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		System.setProperty("debug","true")
-		val listLink = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) dos()
-		else listOf()
+		val listLink = getLocalIps()
 		val listGlobal = getIps()
 		setContent {
 			val appViewModel: AppViewModel = viewModel()
@@ -67,8 +63,7 @@ class MainActivity : ComponentActivity() {
 		}
 	}
 
-	@RequiresApi(Build.VERSION_CODES.M)
-	fun dos() : List<LinkAddress> {
+	private fun getLocalIps() : List<LinkAddress> {
 		val connectivityManager = getSystemService(ConnectivityManager::class.java)
 		val currentNetwork = connectivityManager.activeNetwork
 
@@ -93,7 +88,7 @@ class MainActivity : ComponentActivity() {
 			layoutDirection: LayoutDirection,
 			density: Density
 		): Outline {
-			changeWidth.invoke(size.width.coerceAtMost(size.height))
+			changeWidth(size.width.coerceAtMost(size.height))
 			return Outline.Rectangle(Rect(0f,0f,
 				size.width.coerceAtMost(size.height) /* width */, size.height))
 		}
@@ -162,7 +157,7 @@ class MainActivity : ComponentActivity() {
 			) {
 				Box(contentAlignment = Alignment.TopEnd) {
 					Column(horizontalAlignment = Alignment.Start, modifier = Modifier.fillMaxWidth()) {
-						content.invoke()
+						content()
 					}
 					Column(horizontalAlignment = Alignment.End) {
 						ApplicationThemeTransparent {

@@ -20,7 +20,9 @@ fun keyboardAsState(handle : ((Int)->Unit)? = null): State<Keyboard> {
 			val screenHeight = view.rootView.height
 			val keypadHeight = screenHeight - rect.bottom
 			if (keypadHeight > screenHeight * 0.15 && keyboardState.value == Keyboard.Closed) {
-				handle?.invoke(keypadHeight)
+				if (handle != null) {
+					handle(keypadHeight)
+				}
 			}
 			keyboardState.value = if (keypadHeight > screenHeight * 0.15) {
 				Keyboard.Opened

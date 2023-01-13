@@ -1,7 +1,6 @@
 package com.sterndu.pingonvolcano
 
 import android.annotation.SuppressLint
-import android.os.Build
 import com.sterndu.bridge.BridgeClient
 import com.sterndu.bridge.BridgeUtil
 import com.sterndu.bridge.HostConnector
@@ -35,38 +34,38 @@ val run = {
 	}
 	val append: (String, Type) -> Unit = append!!
 
-	append.invoke("Do you want to host a connection? true/false", Type.SYSTEM)
+	append("Do you want to host a connection? true/false", Type.SYSTEM)
 	while (inputs.isEmpty()) {
 		Thread.sleep(5)
 	}
 	host = inputs.removeAt(0).equals("true", ignoreCase = true)
-	append.invoke(host.toString(), Type.SYSTEM)
+	append(host.toString(), Type.SYSTEM)
 
-	append.invoke("Do you want to connect to a Bridge? true/false", Type.SYSTEM)
+	append("Do you want to connect to a Bridge? true/false", Type.SYSTEM)
 	while (inputs.isEmpty()) {
 		Thread.sleep(5)
 	}
 	bridge = inputs.removeAt(0).equals("true", ignoreCase = true)
-	append.invoke(bridge.toString(), Type.SYSTEM)
+	append(bridge.toString(), Type.SYSTEM)
 	var server = ""
 	var port = BridgeUtil.DEFAULT_PORT
 
 	if (bridge) {
-		append.invoke("Please enter the BridgeServer's address", Type.SYSTEM)
+		append("Please enter the BridgeServer's address", Type.SYSTEM)
 		while (inputs.isEmpty()) {
 			Thread.sleep(5)
 		}
 		server = inputs.removeAt(0)
-		append.invoke(server, Type.SYSTEM)
+		append(server, Type.SYSTEM)
 
-		append.invoke("Please enter the BridgeServer's port if it is non Default", Type.SYSTEM)
+		append("Please enter the BridgeServer's port if it is non Default", Type.SYSTEM)
 		while (inputs.isEmpty()) {
 			Thread.sleep(5)
 		}
 		try {
 			port = inputs.removeAt(0).toInt()
 		} catch (_: NumberFormatException) {}
-		append.invoke(port.toString(), Type.SYSTEM)
+		append(port.toString(), Type.SYSTEM)
 	}
 
 	if (host) {
@@ -75,7 +74,7 @@ val run = {
 			try {
 				bc = BridgeClient(server, port)
 			} catch (e: Exception) {
-				append.invoke("Failed to Connect to BridgeServer", Type.SYSTEM)
+				append("Failed to Connect to BridgeServer", Type.SYSTEM)
 			}
 			if (bc != null) {
 				bridgeHost(bc, append)
@@ -87,9 +86,9 @@ val run = {
 		}
 	} else {
 		if (bridge) {
-			append.invoke("Please enter the code you want to join ", Type.SYSTEM)
+			append("Please enter the code you want to join ", Type.SYSTEM)
 		} else {
-			append.invoke("The IP you want to connect to: ", Type.SYSTEM)
+			append("The IP you want to connect to: ", Type.SYSTEM)
 		}
 		while (inputs.isEmpty()) {
 			Thread.sleep(5)
@@ -100,7 +99,7 @@ val run = {
 			try {
 				bc = BridgeClient(server, port)
 			} catch (e: Exception) {
-				append.invoke("Failed to Connect to BridgeServer", Type.SYSTEM)
+				append("Failed to Connect to BridgeServer", Type.SYSTEM)
 			}
 			if (bc != null) {
 				bridgeClient(bc, append, hostname)
@@ -127,7 +126,7 @@ fun reload() {
 	}
 	Updater.getInstance().remove("HandleWrittenMessages")
 	connected = false
-	Thread { run.invoke() }.start()
+	Thread { run() }.start()
 }
 
 fun setConsumer(_append: (String, Type) -> Unit) {
@@ -152,11 +151,11 @@ fun host(append: (String, Type) -> Unit, inputs: MutableList<String>) {
 fun internalHost(cc: Socket, append: (String, Type) -> Unit, inputs: MutableList<String>) {
 	connected = true
 	sock = cc
-	append.invoke("Connected with " + cc.inetAddress, Type.SYSTEM)
+	append("Connected with " + cc.inetAddress, Type.SYSTEM)
 	Updater.getInstance().add(ThrowingRunnable {
 		if (inputs.isNotEmpty()) {
 			val str: String = inputs.removeAt(0)
-			append.invoke("You: $str", Type.SEND)
+			append("You: $str", Type.SEND)
 			if ("exit".equals(str, ignoreCase = true)) {
 				reload()
 			} else cc.sendData(1.toByte(), str.toByteArray(charset("UTF-8")))
@@ -165,18 +164,18 @@ fun internalHost(cc: Socket, append: (String, Type) -> Unit, inputs: MutableList
 	cc.setHandle(1.toByte()) {
 			_, data ->
 		val str = String(data, charset("UTF-8"))
-		append.invoke("Connection: $str", Type.RECEIVE)
+		append("Connection: $str", Type.RECEIVE)
 	}
 }
 
 fun internalClient(cc: Socket, append: (String, Type) -> Unit, inputs: MutableList<String>) {
 	connected = true
 	sock = cc
-	append.invoke("Connected to " + cc.inetAddress, Type.SYSTEM)
+	append("Connected to " + cc.inetAddress, Type.SYSTEM)
 	Updater.getInstance().add(ThrowingRunnable {
 		if (inputs.isNotEmpty()) {
 			val str: String = inputs.removeAt(0)
-			append.invoke("You: $str", Type.SEND)
+			append("You: $str", Type.SEND)
 			if ("exit".equals(str, ignoreCase = true)) {
 				reload()
 			} else {
@@ -187,7 +186,7 @@ fun internalClient(cc: Socket, append: (String, Type) -> Unit, inputs: MutableLi
 	cc.setHandle(1.toByte()) {
 			_, data ->
 		val str = String(data, charset("UTF-8"))
-		append.invoke("Connection: $str", Type.RECEIVE)
+		append("Connection: $str", Type.RECEIVE)
 	}
 }
 
@@ -196,16 +195,16 @@ fun bridgeHost(cc: BridgeClient, append: (String, Type) -> Unit) {
 	conn = hConn.normalConnector
 	connected = true
 	sock = hConn.normalConnector.sock
-	append.invoke("Connect via " + hConn.code, Type.SYSTEM)
+	append("Connect via " + hConn.code, Type.SYSTEM)
 	hConn.announceConnector.setHandle {
 			_, data ->
 		val str = String(data, charset("UTF-8"))
-		append.invoke("Connected: $str", Type.SYSTEM)
+		append("Connected: $str", Type.SYSTEM)
 	}
 	hConn.normalConnector.setHandle {
 			_, data ->
 		val str = String(data, charset("UTF-8"))
-		append.invoke("Connection: $str", Type.RECEIVE)
+		append("Connection: $str", Type.RECEIVE)
 	}
 }
 
@@ -214,11 +213,11 @@ fun bridgeClient(cc: BridgeClient, append: (String, Type) -> Unit, code : String
 	conn = lConn
 	connected = true
 	sock = lConn.sock
-	append.invoke("Connected to $code", Type.SYSTEM)
+	append("Connected to $code", Type.SYSTEM)
 	lConn.setHandle {
 			_, data ->
 		val str = String(data, charset("UTF-8"))
-		append.invoke("Connection: $str", Type.RECEIVE)
+		append("Connection: $str", Type.RECEIVE)
 	}
 }
 
@@ -234,7 +233,7 @@ fun client(host: String, append: (String, Type) -> Unit, inputs: MutableList<Str
 			}
 		}
 	} catch (e : IOException) {
-		append.invoke("Can't connect to $host", Type.SYSTEM)
+		append("Can't connect to $host", Type.SYSTEM)
 		reload()
 	}
 }
@@ -270,9 +269,7 @@ fun start() {
 fun onCreation(appViewModel: AppViewModel) {
 	Updater.getInstance().add(Runnable {
 		time = System.currentTimeMillis()
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-			appViewModel.updateTime(SimpleDateFormat("HH:mm:ss.SSS dd.MM.yyyy E z X").format(Date(time)))
-		} else appViewModel.updateTime("$time")
+		appViewModel.updateTime(SimpleDateFormat("HH:mm:ss.SSS dd.MM.yyyy E z X").format(Date(time)))
 		val lConnected = connected
 		connected = sock!=null && sock!!.isConnected && !sock!!.isClosed
 		if (lConnected && !connected) {
