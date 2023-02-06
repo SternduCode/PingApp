@@ -16,10 +16,8 @@ import io.ktor.client.statement.*
 import kotlinx.coroutines.*
 import java.io.IOException
 import java.lang.Runnable
-import java.text.SimpleDateFormat
 import java.util.*
 
-var time : Long = 0L
 val inputs = mutableListOf<String>()
 var append : ((String, Type) -> Unit)? = null
 var connected = false
@@ -268,8 +266,6 @@ fun start() {
 @SuppressLint("SimpleDateFormat")
 fun onCreation(appViewModel: AppViewModel) {
 	Updater.getInstance().add(Runnable {
-		time = System.currentTimeMillis()
-		appViewModel.updateTime(SimpleDateFormat("HH:mm:ss.SSS dd.MM.yyyy E z X").format(Date(time)))
 		val lConnected = connected
 		connected = sock!=null && sock!!.isConnected && !sock!!.isClosed
 		if (lConnected && !connected) {

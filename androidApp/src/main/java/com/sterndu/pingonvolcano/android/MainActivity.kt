@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -39,22 +40,37 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.sterndu.pingonvolcano.*
 import kotlinx.coroutines.*
+import java.io.File
+import java.io.FileOutputStream
 
 class MainActivity : ComponentActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		System.setProperty("debug","true")
+		val dir = applicationContext.filesDir
+		val preferencesFile = File(dir, "preferences")
+		if (!preferencesFile.exists()) {
+			preferencesFile.createNewFile()
+			try {
+				var out = FileOutputStream(preferencesFile)
+				out.write('{'.code)
+				out.write('}'.code)
+				out.flush()
+				out.close()
+			} catch (e: Exception) {
+			}
+		}
 		val listLink = getLocalIps()
 		val listGlobal = getIps()
 		setContent {
 			val appViewModel: AppViewModel = viewModel()
 			onCreation(appViewModel)
-			appViewModel.init(listLink,listGlobal)
+			appViewModel.init(listLink,listGlobal,preferencesFile)
 			ApplicationTheme {
 				val navController = rememberNavController()
 
 				NavHost(navController = navController, startDestination = "chat") {
-					composable("chat") { BaseView(navController) { View(appViewModel) } }
+					composable("chat") { BaseView(navController) { Chats(appViewModel) } }
 					composable("about") { BaseView(navController) { About().View() } }
 					composable("settings") { BaseView(navController) { Settings().View() } }
 				}
@@ -102,10 +118,12 @@ class MainActivity : ComponentActivity() {
 			mutableStateOf(0f)
 		}
 
+		val connected by remember {
+			mutableStateOf(isConnected())
+		}
+
 		val density = LocalDensity.current
-
 		val scaffoldState = rememberScaffoldState()
-
 		val coroutineScope = rememberCoroutineScope()
 
 		Scaffold (
@@ -155,8 +173,19 @@ class MainActivity : ComponentActivity() {
 				modifier = Modifier.fillMaxSize(),
 				color = MaterialTheme.colors.background
 			) {
-				Box(contentAlignment = Alignment.TopEnd) {
-					Column(horizontalAlignment = Alignment.Start, modifier = Modifier.fillMaxWidth()) {
+				Box(
+					contentAlignment = Alignment.TopEnd,
+				) {
+					Column(
+						horizontalAlignment = Alignment.Start,
+						modifier = Modifier
+							.fillMaxWidth()
+							.background(
+								TextFieldDefaults
+									.textFieldColors()
+									.backgroundColor(enabled = true).value
+							)
+					) {
 						content()
 					}
 					Column(horizontalAlignment = Alignment.End) {
@@ -176,7 +205,7 @@ class MainActivity : ComponentActivity() {
 								)
 							}
 							//println(navController.currentDestination?.navigatorName)
-							if (isConnected() ) {
+							if (connected) {
 								Button(
 									onClick = { Thread { reload() }.start() },
 									modifier = Modifier
@@ -201,9 +230,8 @@ class MainActivity : ComponentActivity() {
 
 	@Composable
 	fun Message.Compose(fontSize: TextUnit = TextUnit.Unspecified) {
-		val color = TextFieldDefaults.textFieldColors().backgroundColor(enabled = true).value
 		Row(
-			modifier = Modifier.background(color)
+			modifier = Modifier.background(Color(0, 0, 0, 0))
 		) {
 			TextField(
 				value = text,
@@ -215,6 +243,23 @@ class MainActivity : ComponentActivity() {
 				textStyle = TextStyle(fontSize = fontSize),
 				colors = TextFieldDefaults.textFieldColors(backgroundColor = Color(0f, 0f, 0f, 0f))
 			)
+		}
+	}
+
+	@Composable
+	fun Chats(
+		appViewModel: AppViewModel
+	) {
+		Column {
+			Text("Chats")
+		}
+		LazyColumn {
+			items(appViewModel.chats.toList()) {
+				Column {
+					Text(it.name)
+					Text(it.messages.last())
+				}
+			}
 		}
 	}
 
@@ -245,7 +290,9 @@ class MainActivity : ComponentActivity() {
 							value = output,
 							onValueChange = {},
 							readOnly = true,
-							modifier = Modifier.fillMaxWidth()
+							colors = TextFieldDefaults.textFieldColors(backgroundColor = Color(0, 0, 0, 0)),
+							modifier = Modifier
+								.fillMaxWidth()
 						)
 					}
 					val layoutInfo by remember { derivedStateOf { listState.layoutInfo } }
@@ -299,6 +346,7 @@ class MainActivity : ComponentActivity() {
 					onValueChange = {
 						input = it
 					},
+					colors = TextFieldDefaults.textFieldColors(backgroundColor = Color(0, 0, 0, 0)),
 					modifier = Modifier
 						.widthIn(
 							min = LocalConfiguration.current.screenWidthDp.dp - Dp(64f),
@@ -307,7 +355,8 @@ class MainActivity : ComponentActivity() {
 						.heightIn(
 							min = Dp(64f),
 							max = LocalConfiguration.current.screenHeightDp.dp / 2f
-						),
+						)
+						.shadow(2.dp),
 					shape = RectangleShape
 				)
 				Button(
@@ -316,12 +365,7 @@ class MainActivity : ComponentActivity() {
 						input = ""
 					},
 					modifier = Modifier
-						.height(Dp(64f))
-						.background(
-							TextFieldDefaults
-								.textFieldColors()
-								.backgroundColor(enabled = true).value
-						),
+						.height(Dp(64f)),
 					shape = RoundedCornerShape(64f)
 				) {
 					Icon(

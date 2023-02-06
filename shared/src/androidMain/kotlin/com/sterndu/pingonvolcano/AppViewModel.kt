@@ -6,6 +6,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.json.*
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
 
 class AppViewModel : ViewModel() {
 
@@ -15,8 +20,12 @@ class AppViewModel : ViewModel() {
 
 	private lateinit var localIps: String
 	private lateinit var globalIps: String
+	private lateinit var configFile: File
+	private lateinit var preferences: JsonObject
 
-	fun init(localIps: List<LinkAddress>, globalIps: List<String>) {
+	@OptIn(ExperimentalSerializationApi::class)
+	fun init(localIps: List<LinkAddress>, globalIps: List<String>, configFile: File) {
+		this.configFile = configFile
 		this.localIps = localIps.joinToString(separator = "\n  ", prefix = "  ")
 		this.globalIps = "Your Public IPs are:\n${
 			globalIps.joinToString(
@@ -24,11 +33,18 @@ class AppViewModel : ViewModel() {
 				prefix = "  "
 			)
 		}"
+		_status.update { "Your Local IPs are:\n$localIps\n$globalIps" }
+
+		preferences = Json.decodeFromStream(FileInputStream(configFile))
 	}
 
-	fun updateTime(time: String) {
-		_status.update { "$time\nYour Local IPs are:\n$localIps\n$globalIps" }
+	fun updatePreferences(preferences: JsonObject) {
+		Json.encodeToStream(preferences, FileOutputStream(configFile))
 	}
+
+	private val _chats : MutableList<Chat> = mutableListOf()
+	val chats : Sequence<Chat>
+		get() = _chats.asSequence()
 
 	private val _status = MutableStateFlow("")
 

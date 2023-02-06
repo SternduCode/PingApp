@@ -30,7 +30,7 @@ android {
     }
     buildTypes {
         getByName("release") {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
         }
     }
 }
@@ -51,7 +51,7 @@ dependencies {
     implementation("androidx.emoji:emoji:1.1.0")
     implementation("com.google.firebase:protolite-well-known-types:18.0.0")
     implementation("androidx.appcompat:appcompat:1.6.0")
-    implementation("com.google.android.material:material:1.7.0")
+    implementation("com.google.android.material:material:1.8.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
 
 }
