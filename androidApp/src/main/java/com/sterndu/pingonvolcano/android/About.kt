@@ -173,6 +173,7 @@ class About {
                                 )
                                 Text(text = "2023 The PingApp Developers",Modifier.padding(start = 5.dp),fontFamily = fontFamily)
                             }
+                            Spacer(modifier = Modifier.size(10.dp))
                         }
                     }
                 }
