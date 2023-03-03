@@ -3,5 +3,5 @@
     <string name="about_text2">Felix is a German junior developer that tries his best to learn how to code.</string>
     <string name="description">This app is a kind of messenger that can be used to communicate with others.
     \nTherefore it uses a P2P connection from the client to the host or a Bridge connection with a server in between.
-    \nTo secure this, this app uses an AES-256 encryption on all connections.</string>
+    \nTo secure this, this app uses an AES-256 or a ChaCha20 encryption on all connections.</string>
 </resources>

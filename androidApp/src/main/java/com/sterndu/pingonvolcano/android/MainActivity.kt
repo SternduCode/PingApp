@@ -32,6 +32,8 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -45,6 +47,10 @@ import com.sterndu.pingonvolcano.*
 import kotlinx.coroutines.*
 import java.io.File
 import java.io.FileOutputStream
+
+val fontFamily = FontFamily(
+	Font(R.font.cascadiacode)
+)
 
 class MainActivity : ComponentActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
@@ -260,8 +266,14 @@ class MainActivity : ComponentActivity() {
 		appViewModel: AppViewModel,
 		navController: NavHostController
 	) {
-		Column {
-			Text("Chats")
+		Column(
+			modifier = Modifier
+				.fillMaxWidth()
+				.padding(top = 16.dp),
+			horizontalAlignment = Alignment.CenterHorizontally
+		) {
+			Text(text = "Chats",fontSize = 30.sp, fontFamily = fontFamily)
+			Spacer(modifier = Modifier.size(20.dp))
 		}
 		LazyColumn {
 			items(appViewModel.chats.toList()) {

@@ -207,23 +207,10 @@ class Settings {
 							}
 						}
 					}
-					Column(
-						modifier = Modifier
-							.fillMaxSize(),
-						horizontalAlignment = Alignment.CenterHorizontally
-					) {
-						var mCheckedState by remember{ mutableStateOf(false) }
-						Switch(
-							checked = mCheckedState,
-							onCheckedChange = { mCheckedState = it })
-					}
-
 				}
 			}
 		}
-
 	}
-
 }
 @Preview
 @Composable
