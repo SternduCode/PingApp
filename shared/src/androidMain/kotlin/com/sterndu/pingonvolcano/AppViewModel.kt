@@ -8,9 +8,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.*
+import kotlinx.serialization.*
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.util.*
 
 class AppViewModel : ViewModel() {
 
@@ -21,7 +25,13 @@ class AppViewModel : ViewModel() {
 	private lateinit var localIps: String
 	private lateinit var globalIps: String
 	private lateinit var configFile: File
-	private lateinit var preferences: JsonObject
+	lateinit var preferences: MutableMap<String, JsonElement>
+
+	operator fun MutableMap<String, JsonElement>.set(s: String, value: JsonElement) {
+		this.put(s, value)
+		println("Umhh $s $value")
+		updatePreferences(this)
+	}
 
 	@OptIn(ExperimentalSerializationApi::class)
 	fun init(localIps: List<LinkAddress>, globalIps: List<String>, configFile: File) {
@@ -34,16 +44,18 @@ class AppViewModel : ViewModel() {
 			)
 		}"
 		_status.update { "Your Local IPs are:\n$localIps\n$globalIps" }
-
-		preferences = Json.decodeFromStream(FileInputStream(configFile))
+		val map = Json.decodeFromStream(MapSerializer(String.serializer(), JsonElement.serializer()), FileInputStream(configFile))
+		preferences = mutableMapOf()
+		preferences.putAll(map)
 	}
 
-	fun updatePreferences(preferences: JsonObject) {
-		Json.encodeToStream(preferences, FileOutputStream(configFile))
+	@OptIn(ExperimentalSerializationApi::class)
+	private fun updatePreferences(preferences: Map<String, JsonElement>) {
+		Json.encodeToStream(JsonObject(preferences), FileOutputStream(configFile))
 	}
 
-	private val _chats : MutableList<Chat> = mutableListOf()
-	val chats : Sequence<Chat>
+	private val _chats : MutableMap<String, Chat> = mutableMapOf("default" to Chat("Default"))
+	val chats : Sequence<Map.Entry<String, Chat>>
 		get() = _chats.asSequence()
 
 	private val _status = MutableStateFlow("")

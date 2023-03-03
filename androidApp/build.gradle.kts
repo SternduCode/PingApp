@@ -49,8 +49,9 @@ dependencies {
     implementation("androidx.activity:activity-compose:1.6.1")
     implementation("androidx.navigation:navigation-compose:$navVersion")
     implementation("androidx.emoji:emoji:1.1.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
     implementation("com.google.firebase:protolite-well-known-types:18.0.0")
-    implementation("androidx.appcompat:appcompat:1.6.0")
+    implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.8.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
 

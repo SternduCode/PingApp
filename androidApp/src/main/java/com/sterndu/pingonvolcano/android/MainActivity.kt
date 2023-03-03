@@ -7,6 +7,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -35,9 +36,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.sterndu.pingonvolcano.*
 import kotlinx.coroutines.*
 import java.io.File
@@ -52,12 +55,12 @@ class MainActivity : ComponentActivity() {
 		if (!preferencesFile.exists()) {
 			preferencesFile.createNewFile()
 			try {
-				var out = FileOutputStream(preferencesFile)
+				val out = FileOutputStream(preferencesFile)
 				out.write('{'.code)
 				out.write('}'.code)
 				out.flush()
 				out.close()
-			} catch (e: Exception) {
+			} catch (_: Exception) {
 			}
 		}
 		val listLink = getLocalIps()
@@ -69,10 +72,16 @@ class MainActivity : ComponentActivity() {
 			ApplicationTheme {
 				val navController = rememberNavController()
 
-				NavHost(navController = navController, startDestination = "chat") {
-					composable("chat") { BaseView(navController) { Chats(appViewModel) } }
+				NavHost(navController = navController, startDestination = "chats") {
+					composable("chats") { BaseView(navController) { Chats(appViewModel, navController) } }
+					composable(
+						"chats/{chatId}",
+						arguments = listOf(navArgument("chatId") { type = NavType.StringType })
+					) {
+						BaseView(navController) { View(appViewModel, it.arguments?.getString("userId")?:"default") }
+					}
 					composable("about") { BaseView(navController) { About().View() } }
-					composable("settings") { BaseView(navController) { Settings().View() } }
+					composable("settings") { BaseView(navController) { Settings().View(appViewModel) } }
 				}
 
 			}
@@ -154,7 +163,7 @@ class MainActivity : ComponentActivity() {
 					onItemClick = {
 						when(it.id) {
 							"home" -> {
-								navController.navigate("chat")
+								navController.navigate("chats")
 							}
 							"settings" -> {
 								navController.navigate("settings")
@@ -248,16 +257,21 @@ class MainActivity : ComponentActivity() {
 
 	@Composable
 	fun Chats(
-		appViewModel: AppViewModel
+		appViewModel: AppViewModel,
+		navController: NavHostController
 	) {
 		Column {
 			Text("Chats")
 		}
 		LazyColumn {
 			items(appViewModel.chats.toList()) {
-				Column {
-					Text(it.name)
-					Text(it.messages.last())
+				Column(
+						modifier = Modifier.clickable {
+							navController.navigate("chats/default")
+						}.fillMaxWidth()
+				) {
+					Text(it.value.name)
+					Text(if (it.value.messages.isNotEmpty()) it.value.messages.last() else "N/A")
 				}
 			}
 		}
@@ -265,7 +279,8 @@ class MainActivity : ComponentActivity() {
 
 	@Composable
 	fun View(
-		appViewModel: AppViewModel
+		appViewModel: AppViewModel,
+		chatId: String
 	) {
 
 		val appendixList : Sequence<Message> = remember { appViewModel.elements }
@@ -384,6 +399,6 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun DefaultPreview() {
 	ApplicationTheme {
-		MainActivity().View(viewModel())
+		MainActivity().View(viewModel(), "default")
 	}
 }

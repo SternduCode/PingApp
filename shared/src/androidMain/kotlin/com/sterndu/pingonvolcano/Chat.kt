@@ -1,11 +1,10 @@
 package com.sterndu.pingonvolcano
 
-class Chat {
+class Chat(private var _name : String, private var _messages : MutableList<String> = mutableListOf()) {
 
-	private var _name : String = ""
 	val name
 		get() = _name
 
-	val messages : List<String> = listOf()
+	val messages : List<String> = _messages.toList()
 
 }
